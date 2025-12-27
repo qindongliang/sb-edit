@@ -18,7 +18,9 @@ description: 将指定的 .sb3 文件转换为 Leopard 项目并自动关联本�
    ```shell
    # 如果没有提供 OUTPUT_DIR，默认使用 /tmp
    CONF_OUTPUT_DIR="${OUTPUT_DIR:-/tmp}"
-   TARGET_PATH="$CONF_OUTPUT_DIR/sb3_leopard/$(basename "<SB3_PATH>" .sb3)"
+   # 提取文件名并处理空格和点号（替换为下划线），连字符去重并去除末尾下划线，以提高路径兼容性
+   PROJECT_NAME=$(basename "<SB3_PATH>" .sb3 | tr ' .' '_' | sed 's/__*/_/g; s/_*$//')
+   TARGET_PATH="$CONF_OUTPUT_DIR/sb3_leopard/$PROJECT_NAME"
 
    # 如果目标路径已存在且非空，先删除以确保导出的是干净的版本
    if [ -n "$TARGET_PATH" ] && [ -d "$TARGET_PATH" ]; then

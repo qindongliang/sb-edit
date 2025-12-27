@@ -242,7 +242,9 @@ async function run() {
         for (const target of [project.stage, ...project.sprites]) {
           const costumeDir = path.join(target.name, "costumes");
           for (const costume of target.costumes) {
-            const filename = path.join(costumeDir, `${costume.name}.${costume.ext}`);
+            // Sanitize filename: replace ? with _
+            const safeName = costume.name.replace(/\?/g, "_");
+            const filename = path.join(costumeDir, `${safeName}.${costume.ext}`);
             const filePath = path.resolve(fullOutputPath, filename);
             await fs.mkdir(path.dirname(filePath), { recursive: true });
             const asset = Buffer.from(costume.asset as ArrayBuffer);
@@ -251,7 +253,9 @@ async function run() {
 
           const soundDir = path.join(target.name, "sounds");
           for (const sound of target.sounds) {
-            const filename = path.join(soundDir, `${sound.name}.${sound.ext}`);
+            // Sanitize filename: replace ? with _
+            const safeName = sound.name.replace(/\?/g, "_");
+            const filename = path.join(soundDir, `${safeName}.${sound.ext}`);
             const filePath = path.resolve(fullOutputPath, filename);
             await fs.mkdir(path.dirname(filePath), { recursive: true });
             const asset = Buffer.from(sound.asset as ArrayBuffer);

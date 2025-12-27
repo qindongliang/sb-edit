@@ -413,11 +413,13 @@ export default function toLeopard(
       }
     },
     getAssetURL: ({ type, target, name, ext }) => {
+      // Sanitize name: replace ? with _ for URL safety
+      const safeName = name.replace(/\?/g, "_");
       switch (type) {
         case "costume":
-          return `./${target}/costumes/${name}.${ext}`;
+          return `./${target}/costumes/${safeName}.${ext}`;
         case "sound":
-          return `./${target}/sounds/${name}.${ext}`;
+          return `./${target}/sounds/${safeName}.${ext}`;
       }
     },
     indexURL: "./index.js",
