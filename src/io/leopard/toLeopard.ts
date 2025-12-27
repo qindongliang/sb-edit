@@ -2614,11 +2614,97 @@ export default function toLeopard(
       <!DOCTYPE html>
       <html>
         <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <link rel="stylesheet" href="${toLeopardCSS({ from: "index" })}" />
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html, body { 
+              width: 100%; 
+              height: 100%; 
+              overflow: hidden; 
+              background: #000; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center; 
+            }
+            #project { 
+              width: 100%; 
+              height: 100%; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center; 
+            }
+            #project canvas { 
+              width: 100% !important; 
+              height: 100% !important; 
+              object-fit: contain; 
+              max-width: 100vw; 
+              max-height: 100vh; 
+            }
+            #greenFlag { position: absolute; top: 10px; left: 10px; z-index: 1000; padding: 8px 16px; cursor: pointer; }
+            
+            /* Theme Switcher */
+            .leopard__theme-switcher {
+              position: fixed;
+              bottom: 10px;
+              right: 10px;
+              display: flex;
+              gap: 8px;
+              background: rgba(255, 255, 255, 0.1);
+              padding: 8px;
+              border-radius: 20px;
+              z-index: 2000;
+              backdrop-filter: blur(5px);
+            }
+            .leopard__theme-btn {
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              border: 2px solid rgba(255, 255, 255, 0.5);
+              cursor: pointer;
+              transition: transform 0.2s, border-color 0.2s;
+            }
+            .leopard__theme-btn:hover {
+              transform: scale(1.2);
+              border-color: #fff;
+            }
+            .leopard__theme-btn.active {
+              border-color: #fff;
+              box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            }
+          </style>
         </head>
         <body>
-          <button id="greenFlag">Green Flag</button>
-          <div id="project"></div>
+          <div id="project">
+            <button id="greenFlag">Green Flag</button>
+          </div>
+
+          <div class="leopard__theme-switcher">
+            <div class="leopard__theme-btn" style="background: #000;" data-theme="#000" title="Pitch Black"></div>
+            <div class="leopard__theme-btn" style="background: #333;" data-theme="#333" title="Dark Gray"></div>
+            <div class="leopard__theme-btn" style="background: #f0f0f0;" data-theme="#f0f0f0" title="Light Gray"></div>
+            <div class="leopard__theme-btn" style="background: linear-gradient(135deg, #1D976C 0%, #93F9B9 100%);" data-theme="linear-gradient(135deg, #1D976C 0%, #93F9B9 100%)" title="Eye Comfort Green"></div>
+          </div>
+
+          <script>
+            const themes = document.querySelectorAll('.leopard__theme-btn');
+            const savedTheme = localStorage.getItem('leopard_theme') || '#000';
+
+            function setTheme(theme) {
+              document.body.style.background = theme;
+              localStorage.setItem('leopard_theme', theme);
+              themes.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === theme);
+              });
+            }
+
+            themes.forEach(btn => {
+              btn.addEventListener('click', () => setTheme(btn.dataset.theme));
+            });
+
+            // Initialize
+            setTheme(savedTheme);
+          </script>
 
           <script type="module">
             import project from ${JSON.stringify(options.indexURL)};
@@ -2646,7 +2732,7 @@ export default function toLeopard(
         )
         .join("\n")}
 
-      const stage = new Stage(${JSON.stringify({ costumeNumber: project.stage.costumeNumber + 1 })});
+      const stage = new Stage(${JSON.stringify({ costumeNumber: project.stage.costumeNumber + 1, width: 600, height: 440 })});
 
       const sprites = {
         ${project.sprites
