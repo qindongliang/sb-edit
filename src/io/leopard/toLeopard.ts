@@ -2672,11 +2672,95 @@ export default function toLeopard(
               border-color: #fff;
               box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
             }
+            /* Fullscreen Button */
+            #fullscreenBtn {
+              position: absolute;
+              top: 10px;
+              right: 10px;
+              z-index: 1000;
+              background: rgba(255, 255, 255, 0.8);
+              border: none;
+              cursor: pointer;
+              width: 44px;
+              height: 44px;
+              padding: 10px;
+              border-radius: 50%;
+              transition: background 0.2s, transform 0.2s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            #fullscreenBtn:hover {
+              background: rgba(255, 255, 255, 1);
+              transform: scale(1.1);
+            }
+            #fullscreenBtn svg {
+              width: 100%;
+              height: 100%;
+              fill: #333;
+            }
+
+            /* UI Folder (Immersive Mode) */
+            #ui-folder {
+              position: fixed;
+              top: 10px;
+              left: 50%;
+              transform: translateX(-50%);
+              z-index: 2000;
+              width: 32px;
+              height: 32px;
+              background: rgba(255, 255, 255, 0.4);
+              border: none;
+              border-radius: 50%;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              backdrop-filter: blur(5px);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            #ui-folder:hover {
+              background: rgba(255, 255, 255, 0.8);
+            }
+            #ui-folder svg {
+              width: 24px;
+              height: 24px;
+              fill: #333;
+            }
+            
+            /* Folded State */
+            body.ui-folded #greenFlag,
+            body.ui-folded #fullscreenBtn {
+              transform: translateY(-100px);
+              opacity: 0;
+            }
+            body.ui-folded #ui-folder {
+              background: rgba(255, 255, 255, 0.1);
+              opacity: 0.5;
+            }
+            body.ui-folded #ui-folder:hover {
+              opacity: 1;
+              background: rgba(255, 255, 255, 0.6);
+            }
+            
+            /* Canvas Cropping for Immersive Mode */
+            body.ui-folded #project canvas {
+              /* 
+                Scale up by 1.2x (to fill width after crop) 
+                Move up by 8% (to hide top menu bar ~50px)
+              */
+              transform: scale(1.2) translateY(-8%);
+              transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            #project canvas {
+              transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
           </style>
         </head>
         <body>
           <div id="project">
             <button id="greenFlag">Green Flag</button>
+            <button id="fullscreenBtn" title="Toggle Fullscreen"></button>
           </div>
 
           <div class="leopard__theme-switcher">
@@ -2687,6 +2771,7 @@ export default function toLeopard(
           </div>
 
           <script>
+            // Theme Switcher
             const themes = document.querySelectorAll('.leopard__theme-btn');
             const savedTheme = localStorage.getItem('leopard_theme') || '#000';
 
@@ -2701,9 +2786,48 @@ export default function toLeopard(
             themes.forEach(btn => {
               btn.addEventListener('click', () => setTheme(btn.dataset.theme));
             });
-
-            // Initialize
             setTheme(savedTheme);
+
+            // Fullscreen Toggle
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const projectContainer = document.getElementById('project');
+            
+            const enterIcon = '<svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>';
+            const exitIcon = '<svg viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>';
+
+            fullscreenBtn.innerHTML = enterIcon;
+
+            function toggleFullscreen() {
+              if (!document.fullscreenElement) {
+                projectContainer.requestFullscreen().catch(err => {
+                  console.error("Error attempting to enable fullscreen:", err);
+                });
+              } else {
+                document.exitFullscreen();
+              }
+            }
+
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+            document.addEventListener('fullscreenchange', () => {
+              fullscreenBtn.innerHTML = document.fullscreenElement ? exitIcon : enterIcon;
+            });
+
+            // UI Fold (Immersive Mode)
+            const foldBtn = document.createElement('button');
+            foldBtn.id = 'ui-folder';
+            foldBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>'; // Chevron Up
+            foldBtn.title = 'Fold UI (Immersive Mode)';
+            document.body.appendChild(foldBtn);
+
+            let isFolded = false;
+            foldBtn.addEventListener('click', () => {
+              isFolded = !isFolded;
+              document.body.classList.toggle('ui-folded', isFolded);
+              // Rotate chevron
+              foldBtn.style.transform = isFolded ? 'translateX(-50%) rotate(180deg)' : 'translateX(-50%) rotate(0deg)';
+              foldBtn.title = isFolded ? 'Unfold UI' : 'Fold UI (Immersive Mode)';
+            });
           </script>
 
           <script type="module">
@@ -2732,7 +2856,7 @@ export default function toLeopard(
         )
         .join("\n")}
 
-      const stage = new Stage(${JSON.stringify({ costumeNumber: project.stage.costumeNumber + 1, width: 600, height: 440 })});
+      const stage = new Stage(${JSON.stringify({ costumeNumber: project.stage.costumeNumber + 1, width: 480, height: 360 })});
 
       const sprites = {
         ${project.sprites
