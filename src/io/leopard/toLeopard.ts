@@ -1499,6 +1499,16 @@ export default function toLeopard(
               break;
             }
 
+            case "other scripts in sprite": {
+              blockSource = `this.stopOtherScripts();`;
+              break;
+            }
+
+            case "all": {
+              blockSource = `this.stage._project.stopAll();`;
+              break;
+            }
+
             default: {
               blockSource = `/* TODO: Implement stop ${block.inputs.STOP_OPTION.value} */ null`;
               break;
