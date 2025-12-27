@@ -2706,7 +2706,7 @@ export default function toLeopard(
               top: 10px;
               left: 50%;
               transform: translateX(-50%);
-              z-index: 2000;
+              z-index: 5000;
               width: 32px;
               height: 32px;
               background: rgba(255, 255, 255, 0.4);
@@ -2735,25 +2735,36 @@ export default function toLeopard(
               opacity: 0;
             }
             body.ui-folded #ui-folder {
-              background: rgba(255, 255, 255, 0.1);
-              opacity: 0.5;
+              background: rgba(255, 255, 255, 0);
+              opacity: 0;
             }
             body.ui-folded #ui-folder:hover {
               opacity: 1;
               background: rgba(255, 255, 255, 0.6);
             }
             
-            /* Canvas Cropping for Immersive Mode */
-            body.ui-folded #project canvas {
-              /* 
-                Scale up by 1.2x (to fill width after crop) 
-                Move up by 8% (to hide top menu bar ~50px)
-              */
-              transform: scale(1.2) translateY(-8%);
-              transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Black Mask for Immersive Mode */
+            #immersive-mask {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 40px; /* Approximate height of top menu bar */
+              background: #000;
+              z-index: 4000; /* Below fold button (5000), above canvas */
+              opacity: 0;
+              pointer-events: none;
+              transition: opacity 0.5s ease;
             }
-            #project canvas {
-              transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+            body.ui-folded #immersive-mask {
+              opacity: 1;
+              pointer-events: auto;
+            }
+
+            /* NO Canvas movement in Black Mask Mode */
+            body.ui-folded #project canvas {
+              transform: none;
             }
           </style>
         </head>
@@ -2818,7 +2829,13 @@ export default function toLeopard(
             foldBtn.id = 'ui-folder';
             foldBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>'; // Chevron Up
             foldBtn.title = 'Fold UI (Immersive Mode)';
-            document.body.appendChild(foldBtn);
+            const projectContainer = document.getElementById('project');
+            projectContainer.appendChild(foldBtn);
+
+            // Create Black Mask
+            const mask = document.createElement('div');
+            mask.id = 'immersive-mask';
+            projectContainer.appendChild(mask);
 
             let isFolded = false;
             foldBtn.addEventListener('click', () => {
