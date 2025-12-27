@@ -2702,7 +2702,7 @@ export default function toLeopard(
 
             /* UI Folder (Immersive Mode) */
             #ui-folder {
-              position: fixed;
+              position: absolute;
               top: 10px;
               left: 50%;
               transform: translateX(-50%);
@@ -2734,14 +2734,7 @@ export default function toLeopard(
               transform: translateY(-100px);
               opacity: 0;
             }
-            body.ui-folded #ui-folder {
-              background: rgba(255, 255, 255, 0);
-              opacity: 0;
-            }
-            body.ui-folded #ui-folder:hover {
-              opacity: 1;
-              background: rgba(255, 255, 255, 0.6);
-            }
+            /* Fold button stays visible, no auto-hide */
             
             /* Black Mask for Immersive Mode */
             #immersive-mask {
@@ -2749,7 +2742,7 @@ export default function toLeopard(
               top: 0;
               left: 0;
               width: 100%;
-              height: 40px; /* Approximate height of top menu bar */
+              height: 15%; /* Increased percentage for full menu bar coverage */
               background: #000;
               z-index: 4000; /* Below fold button (5000), above canvas */
               opacity: 0;
@@ -2829,7 +2822,6 @@ export default function toLeopard(
             foldBtn.id = 'ui-folder';
             foldBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>'; // Chevron Up
             foldBtn.title = 'Fold UI (Immersive Mode)';
-            const projectContainer = document.getElementById('project');
             projectContainer.appendChild(foldBtn);
 
             // Create Black Mask
