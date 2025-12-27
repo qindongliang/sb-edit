@@ -241,19 +241,21 @@ async function run() {
 
         for (const target of [project.stage, ...project.sprites]) {
           const costumeDir = path.join(target.name, "costumes");
-          await fs.mkdir(path.resolve(fullOutputPath, costumeDir), { recursive: true });
           for (const costume of target.costumes) {
             const filename = path.join(costumeDir, `${costume.name}.${costume.ext}`);
+            const filePath = path.resolve(fullOutputPath, filename);
+            await fs.mkdir(path.dirname(filePath), { recursive: true });
             const asset = Buffer.from(costume.asset as ArrayBuffer);
-            await fs.writeFile(path.resolve(fullOutputPath, filename), asset);
+            await fs.writeFile(filePath, asset);
           }
 
           const soundDir = path.join(target.name, "sounds");
-          await fs.mkdir(path.resolve(fullOutputPath, soundDir), { recursive: true });
           for (const sound of target.sounds) {
             const filename = path.join(soundDir, `${sound.name}.${sound.ext}`);
+            const filePath = path.resolve(fullOutputPath, filename);
+            await fs.mkdir(path.dirname(filePath), { recursive: true });
             const asset = Buffer.from(sound.asset as ArrayBuffer);
-            await fs.writeFile(path.resolve(fullOutputPath, filename), asset);
+            await fs.writeFile(filePath, asset);
           }
         }
 

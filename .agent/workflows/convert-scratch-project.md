@@ -14,14 +14,20 @@ description: 将指定的 .sb3 文件转换为 Leopard 项目并自动关联本�
 
 // turbo
 1. **执行转换（一键关联本地库）**
-   此命令将自动完成项目转换。输出目录将位于 `OUTPUT_DIR` 下的 `sb3_leopard` 子目录。
+   此命令将自动清除旧目录并完成项目转换。输出目录将位于 `OUTPUT_DIR` 下的 `sb3_leopard` 子目录。
    ```shell
    # 如果没有提供 OUTPUT_DIR，默认使用 /tmp
    CONF_OUTPUT_DIR="${OUTPUT_DIR:-/tmp}"
-   
+   TARGET_PATH="$CONF_OUTPUT_DIR/sb3_leopard/$(basename "<SB3_PATH>" .sb3)"
+
+   # 如果目标路径已存在且非空，先删除以确保导出的是干净的版本
+   if [ -n "$TARGET_PATH" ] && [ -d "$TARGET_PATH" ]; then
+     rm -rf "$TARGET_PATH"
+   fi
+
    node lib/cli/index.js \
      -i "<SB3_PATH>" \
-     -o "$CONF_OUTPUT_DIR/sb3_leopard/$(basename "<SB3_PATH>" .sb3)" \
+     -o "$TARGET_PATH" \
      -ot leopard \
      --leopard-local-path /Users/qindongliang/project/web/leopard
    ```
@@ -34,7 +40,8 @@ description: 将指定的 .sb3 文件转换为 Leopard 项目并自动关联本�
    打开生成的 `index.html`，确认引用路径为 `./local_leopard/index.min.css`。
 2. **预览运行**：
    ```shell
-   cd "<OUTPUT_DIR>/leopard-project"
+   # 使用上面脚本中生成的 TARGET_PATH
+   cd "$TARGET_PATH"
    npx vite
    ```
 
