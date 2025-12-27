@@ -781,7 +781,16 @@ export default function toLeopard(
             }
 
             default: {
-              const sprite = spriteInputToJS(block.inputs.TO);
+              let sprite: string;
+              if ((block.inputs.TO as any).type === "block") {
+                const spriteName = inputToJS(
+                  block.inputs.TO,
+                  InputShape.String
+                );
+                sprite = `this.sprites[${spriteName}]`;
+              } else {
+                sprite = spriteInputToJS(block.inputs.TO);
+              }
               x = `${sprite}.x`;
               y = `${sprite}.y`;
               break;
@@ -824,7 +833,16 @@ export default function toLeopard(
             }
 
             default: {
-              const sprite = spriteInputToJS(block.inputs.TO);
+              let sprite: string;
+              if ((block.inputs.TO as any).type === "block") {
+                const spriteName = inputToJS(
+                  block.inputs.TO,
+                  InputShape.String
+                );
+                sprite = `this.sprites[${spriteName}]`;
+              } else {
+                sprite = spriteInputToJS(block.inputs.TO);
+              }
               x = `${sprite}.x`;
               y = `${sprite}.y`;
               break;
@@ -2642,6 +2660,12 @@ export default function toLeopard(
         )
         .join(",\n")}
       };
+      
+      // Dynamic sprite aliases for variable lookups
+      ${Object.entries(targetNameMap)
+        .filter(([originalName, sanitizedName]) => originalName !== sanitizedName && sanitizedName !== "Stage")
+        .map(([originalName, sanitizedName]) => `sprites[${JSON.stringify(originalName)}] = sprites.${sanitizedName};`)
+        .join("\n")}
 
       const project = new Project(stage, sprites, {
         frameRate: 30 // Set to 60 to make your project run faster
