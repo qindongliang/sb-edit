@@ -20,7 +20,8 @@ program
   .addOption(new Option("-t, --trace", "Show a detailed error trace"))
   .addOption(
     new Option("--leopard-url <url>", "The URL to use for Leopard").default("https://unpkg.com/leopard@^1/dist/")
-  );
+  )
+  .addOption(new Option("--leopard-local-path <path>", "The path to a local Leopard directory to use instead of a URL"));
 
 program.parse();
 
@@ -31,6 +32,7 @@ const options: {
   outputType: "leopard" | "leopard-zip";
   trace: boolean | undefined;
   leopardUrl: string;
+  leopardLocalPath: string | undefined;
 } = program.opts();
 
 let { input, inputType, output, outputType } = options;
@@ -168,18 +170,23 @@ async function run() {
   );
 
   function toLeopard() {
-    const { leopardUrl: leopardURL } = options;
+    const { leopardUrl: leopardURL, leopardLocalPath } = options;
 
     let fileJS = "index.esm.js";
     let fileCSS = "index.min.css";
 
     let leopardJSURL, leopardCSSURL;
 
-    try {
-      leopardJSURL = String(new URL(fileJS, leopardURL));
-      leopardCSSURL = String(new URL(fileCSS, leopardURL));
-    } catch {
-      throw new Error(`Provided leopard-url isn't a valid URL base`);
+    if (leopardLocalPath) {
+      leopardJSURL = "local_leopard/index.esm.js";
+      leopardCSSURL = "local_leopard/index.min.css";
+    } else {
+      try {
+        leopardJSURL = String(new URL(fileJS, leopardURL));
+        leopardCSSURL = String(new URL(fileCSS, leopardURL));
+      } catch {
+        throw new Error(`Provided leopard-url isn't a valid URL base`);
+      }
     }
 
     return project.toLeopard({
@@ -247,6 +254,50 @@ async function run() {
             const filename = path.join(soundDir, `${sound.name}.${sound.ext}`);
             const asset = Buffer.from(sound.asset as ArrayBuffer);
             await fs.writeFile(path.resolve(fullOutputPath, filename), asset);
+          }
+        }
+
+        if (options.leopardLocalPath) {
+          const localFrameworkDir = path.join(fullOutputPath, "local_leopard");
+          await fs.mkdir(localFrameworkDir, { recursive: true });
+
+          const leopardPath = path.resolve(process.cwd(), options.leopardLocalPath);
+
+          // Copy dist files
+          const distDir = path.join(leopardPath, "dist");
+          const distFiles = ["index.esm.js", "index.min.css", "index.esm.js.map"];
+          for (const file of distFiles) {
+            try {
+              await fs.copyFile(path.join(distDir, file), path.join(localFrameworkDir, file));
+            } catch (err) {
+              // Ignore missing files like .map
+            }
+          }
+
+          // Copy src directory for easier debugging/source maps
+          const srcDir = path.join(leopardPath, "src");
+          const destSrcDir = path.join(localFrameworkDir, "src");
+
+          const copyDir = async (src: string, dest: string) => {
+            await fs.mkdir(dest, { recursive: true });
+            const entries = await fs.readdir(src, { withFileTypes: true });
+
+            for (const entry of entries) {
+              const srcPath = path.join(src, entry.name);
+              const destPath = path.join(dest, entry.name);
+
+              if (entry.isDirectory()) {
+                await copyDir(srcPath, destPath);
+              } else {
+                await fs.copyFile(srcPath, destPath);
+              }
+            }
+          };
+
+          try {
+            await copyDir(srcDir, destSrcDir);
+          } catch (err) {
+            // Ignore if src doesn't exist or other errors
           }
         }
       });
