@@ -583,9 +583,9 @@ export default function toLeopard(
     if (script.hat && script.hat.opcode === OpCode.procedures_definition) {
       return `
         * ${script.name}(${script.hat.inputs.ARGUMENTS.value
-        .filter(arg => arg.type !== "label")
-        .map(arg => arg.name)
-        .join(", ")}) {
+          .filter(arg => arg.type !== "label")
+          .map(arg => arg.name)
+          .join(", ")}) {
           ${body}
         }
       `;
@@ -1034,7 +1034,7 @@ export default function toLeopard(
         case OpCode.looks_switchcostumeto: {
           satisfiesInputShape = InputShape.Stack;
 
-          const costume = inputToJS(block.inputs.COSTUME, InputShape.Any);
+          const costume = inputToJS(block.inputs.COSTUME, InputShape.String);
           blockSource = `this.costume = ${costume}`;
 
           break;
@@ -2620,28 +2620,27 @@ export default function toLeopard(
 
       const sprites = {
         ${project.sprites
-          .map(
-            sprite =>
-              `${sprite.name}: new ${sprite.name}({${Object.entries({
-                x: sprite.x,
-                y: sprite.y,
-                direction: sprite.direction,
-                rotationStyle: `Sprite.RotationStyle.${
-                  {
-                    normal: "ALL_AROUND",
-                    leftRight: "LEFT_RIGHT",
-                    none: "DONT_ROTATE"
-                  }[sprite.rotationStyle]
+        .map(
+          sprite =>
+            `${sprite.name}: new ${sprite.name}({${Object.entries({
+              x: sprite.x,
+              y: sprite.y,
+              direction: sprite.direction,
+              rotationStyle: `Sprite.RotationStyle.${{
+                normal: "ALL_AROUND",
+                leftRight: "LEFT_RIGHT",
+                none: "DONT_ROTATE"
+              }[sprite.rotationStyle]
                 }`,
-                costumeNumber: sprite.costumeNumber + 1,
-                size: sprite.size,
-                visible: sprite.visible,
-                layerOrder: sprite.layerOrder
-              })
-                .map(([key, value]) => `${key}:${value.toString()}`)
-                .join(",")}})`
-          )
-          .join(",\n")}
+              costumeNumber: sprite.costumeNumber + 1,
+              size: sprite.size,
+              visible: sprite.visible,
+              layerOrder: sprite.layerOrder
+            })
+              .map(([key, value]) => `${key}:${value.toString()}`)
+              .join(",")}})`
+        )
+        .join(",\n")}
       };
 
       const project = new Project(stage, sprites, {
@@ -2707,8 +2706,7 @@ export default function toLeopard(
     }
 
     files[`${target.name}/${target.name}.js`] = `
-      import { ${
-        target.isStage ? "Stage as StageBase" : "Sprite"
+      import { ${target.isStage ? "Stage as StageBase" : "Sprite"
       }, Trigger, Watcher, Costume, Color, Sound } from '${toLeopardJS({ from: "target" })}';
 
       export default class ${target.name} extends ${target.isStage ? "StageBase" : "Sprite"} {
@@ -2717,90 +2715,90 @@ export default function toLeopard(
 
           this.costumes = [
             ${target.costumes
-              .map(
-                costume =>
-                  `new Costume(${JSON.stringify(costume.name)}, ${JSON.stringify(
-                    options.getAssetURL({
-                      type: "costume",
-                      target: target.name,
-                      name: costume.name,
-                      md5: costume.md5,
-                      ext: costume.ext
-                    })
-                  )}, ${JSON.stringify({
-                    x: costume.centerX,
-                    y: costume.centerY
-                  })})`
-              )
-              .join(",\n")}
+        .map(
+          costume =>
+            `new Costume(${JSON.stringify(costume.name)}, ${JSON.stringify(
+              options.getAssetURL({
+                type: "costume",
+                target: target.name,
+                name: costume.name,
+                md5: costume.md5,
+                ext: costume.ext
+              })
+            )}, ${JSON.stringify({
+              x: costume.centerX,
+              y: costume.centerY,
+              resolution: costume.bitmapResolution
+            })})`
+        )
+        .join(",\n")}
           ];
 
           this.sounds = [
             ${target.sounds
-              .map(
-                sound =>
-                  `new Sound(${JSON.stringify(sound.name)}, ${JSON.stringify(
-                    options.getAssetURL({
-                      type: "sound",
-                      target: target.name,
-                      name: sound.name,
-                      md5: sound.md5,
-                      ext: sound.ext
-                    })
-                  )})`
-              )
-              .join(",\n")}
+        .map(
+          sound =>
+            `new Sound(${JSON.stringify(sound.name)}, ${JSON.stringify(
+              options.getAssetURL({
+                type: "sound",
+                target: target.name,
+                name: sound.name,
+                md5: sound.md5,
+                ext: sound.ext
+              })
+            )})`
+        )
+        .join(",\n")}
           ];
 
           this.triggers = [
             ${target.scripts
-              .map(script => triggerInitCode(script, target))
-              .filter(trigger => trigger !== null)
-              .join(",\n")}
+        .map(script => triggerInitCode(script, target))
+        .filter(trigger => trigger !== null)
+        .join(",\n")}
           ];
 
           ${target.volume !== 100 ? `this.audioEffects.volume = ${target.volume};` : ""}
 
           ${[...target.variables, ...target.lists]
-            .map(
-              variable =>
-                `this.vars.${variableNameMap[variable.id]} = ${toOptimalJavascriptRepresentation(variable.value)};`
-            )
-            .join("\n")}
+        .map(
+          variable =>
+            `this.vars.${variableNameMap[variable.id]} = ${toOptimalJavascriptRepresentation(variable.value)};`
+        )
+        .join("\n")}
 
           ${[...target.variables, ...target.lists]
-            .filter(variable => variable.visible || shownWatchers.has(variable.id))
-            .map(variable => {
-              const newName = variableNameMap[variable.id];
-              return `this.watchers.${newName} = new Watcher({
+        .filter(variable => variable.visible || shownWatchers.has(variable.id))
+        .map(variable => {
+          const newName = variableNameMap[variable.id];
+          return `this.watchers.${newName} = new Watcher({
               label: ${JSON.stringify((target.isStage ? "" : `${target.name}: `) + variable.name)},
               style: ${JSON.stringify(
-                variable instanceof List
-                  ? "normal"
-                  : { default: "normal", large: "large", slider: "slider" }[variable.mode]
-              )},
+            variable instanceof List
+              ? "normal"
+              : { default: "normal", large: "large", slider: "slider" }[variable.mode]
+          )},
               visible: ${JSON.stringify(variable.visible)},
               value: () => this.vars.${newName},
-              ${
-                variable instanceof Variable && variable.mode === "slider"
-                  ? `setValue: (value) => { this.vars.${newName} = value; },
+              ${variable instanceof Variable && variable.mode === "slider"
+              ? `setValue: (value) => { this.vars.${newName} = value; },
                   step: ${JSON.stringify(variable.isDiscrete ? 1 : 0.01)},
                   min: ${JSON.stringify(variable.sliderMin)},
                   max: ${JSON.stringify(variable.sliderMax)},`
-                  : ""
-              }x: ${JSON.stringify(variable.x + 240)},
+              : ""
+            }x: ${JSON.stringify(variable.x + 240)},
               y: ${JSON.stringify(180 - variable.y)},
               ${"width" in variable ? `width: ${JSON.stringify(variable.width)},` : ""}
               ${"height" in variable ? `height: ${JSON.stringify(variable.height)},` : ""}
             });`;
-            })
-            .join("\n")}
+        })
+        .join("\n")}
         }
 
         ${target.scripts
-          .filter(script => script.hat !== null)
-          .map(script => scriptToJS(script, target))
-          .join("\n\n")}
+        .filter(script => script.hat !== null)
+        .map(script => scriptToJS(script, target))
+        .join("\n\n")}
       }
     `;
   }
