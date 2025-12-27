@@ -17,14 +17,9 @@ Thumbs.db
 *.sb
 
 # Conversion Outputs
-/sb3_convert_dir-*/
-/test_auto_local/
-/test-output-final-3/
-/visualizer/
 
 # IDE and Tools
 .idea/
-.agent/
 .gemini/
 .vscode/
 
@@ -32,3 +27,6 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Project scripts
+/scripts/
