@@ -3066,6 +3066,57 @@ export default function toLeopard(
     `;
   }
 
+  // Sprunki Mode: Post-process Icons sprite to align grid
+  if (options.sprunkiMode) {
+    // Find the Icons sprite JS file and remap coordinates
+    for (const filepath of Object.keys(files)) {
+      if (filepath.match(/Icons\/Icons\.js$/i)) {
+        let content = files[filepath];
+
+        // Collect all goto coordinates
+        const gotoPattern = /this\.goto\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/g;
+        const coords: Array<{ x: number, y: number, match: string }> = [];
+        let m;
+        while ((m = gotoPattern.exec(content)) !== null) {
+          coords.push({ x: parseFloat(m[1]), y: parseFloat(m[2]), match: m[0] });
+        }
+
+        // Filter to icon coordinates (y < 180, reasonable icon range)
+        // and compute new aligned grid positions
+        const iconCoords = coords.filter(c => c.y > -200 && c.y < 180);
+
+        if (iconCoords.length > 0) {
+          // Calculate aligned grid layout
+          // Bottom-aligned, centered horizontally
+          const gridCols = 10;
+          const cellWidth = 48;
+          const cellHeight = 48;
+          const startX = -((gridCols - 1) * cellWidth) / 2;
+          const baseY = 140; // Bottom area
+
+          // Create replacement map (sorted by original x then y for consistent order)
+          iconCoords.sort((a, b) => a.y - b.y || a.x - b.x);
+
+          const replacements: Map<string, string> = new Map();
+          iconCoords.forEach((coord, idx) => {
+            const col = idx % gridCols;
+            const row = Math.floor(idx / gridCols);
+            const newX = startX + col * cellWidth;
+            const newY = baseY - row * cellHeight;
+            replacements.set(coord.match, `this.goto(${newX}, ${newY})`);
+          });
+
+          // Apply replacements
+          replacements.forEach((replacement, original) => {
+            content = content.replace(original, replacement);
+          });
+
+          files[filepath] = content;
+        }
+      }
+    }
+  }
+
   Object.keys(files).forEach(filepath => {
     files[filepath] = prettier.format(files[filepath], { ...prettierConfig, filepath });
   });
