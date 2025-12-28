@@ -21,7 +21,8 @@ program
   .addOption(
     new Option("--leopard-url <url>", "The URL to use for Leopard").default("https://unpkg.com/leopard@^1/dist/")
   )
-  .addOption(new Option("--leopard-local-path <path>", "The path to a local Leopard directory to use instead of a URL"));
+  .addOption(new Option("--leopard-local-path <path>", "The path to a local Leopard directory to use instead of a URL"))
+  .addOption(new Option("--sprunki-mode", "Enable Sprunki-style aligned grid layout for icons"));
 
 program.parse();
 
@@ -33,6 +34,7 @@ const options: {
   trace: boolean | undefined;
   leopardUrl: string;
   leopardLocalPath: string | undefined;
+  sprunkiMode: boolean | undefined;
 } = program.opts();
 
 let { input, inputType, output, outputType } = options;
@@ -191,7 +193,8 @@ async function run() {
 
     return project.toLeopard({
       leopardJSURL,
-      leopardCSSURL
+      leopardCSSURL,
+      sprunkiMode: options.sprunkiMode
     });
   }
 

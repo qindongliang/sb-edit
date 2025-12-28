@@ -395,6 +395,7 @@ export interface ToLeopardOptions {
   getAssetURL: (info: { type: "costume" | "sound"; target: string; name: string; md5: string; ext: string }) => string;
   indexURL: string;
   autoplay: boolean;
+  sprunkiMode: boolean;
 }
 export default function toLeopard(
   project: Project,
@@ -423,7 +424,8 @@ export default function toLeopard(
       }
     },
     indexURL: "./index.js",
-    autoplay: true
+    autoplay: true,
+    sprunkiMode: false
   };
   const options = { ...defaultOptions, ...inOptions };
 
@@ -2759,6 +2761,12 @@ export default function toLeopard(
             body.ui-folded #project canvas {
               transform: none;
             }
+            ${options.sprunkiMode ? `
+            /* Sprunki Mode: Aligned Grid Layout */
+            body {
+              --sprunki-icon-size: 60px;
+            }
+            ` : ''}
           </style>
         </head>
         <body>
